@@ -91,6 +91,7 @@ class Scanner_module():
         self.data[:] = np.zeros(2 * 512 * 512, np.int32)
         self.set_coordinates()
         self.socket.write(struct.pack('<I', 12 << 28))
+        print('scan send')
 
     def read_data(self):
         size = self.socket.bytesAvailable()
@@ -105,7 +106,7 @@ class Scanner_module():
         # value = self.period
         if self.idle: return
         self.socket.write(struct.pack('<I', 0 << 28 | int(value * self.freq)))
-        print('written')
+        print('period send')
 
     def send_trgtime(self, value):
         # value = self.trgtime

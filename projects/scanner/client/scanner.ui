@@ -337,7 +337,7 @@
        <item row="14" column="1">
         <widget class="QLineEdit" name="addrValue">
          <property name="text">
-          <string>192.168.1.100</string>
+          <string>143.129.150.93</string>
          </property>
         </widget>
        </item>

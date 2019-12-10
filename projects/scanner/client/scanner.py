@@ -27,6 +27,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 from PyQt5.uic import loadUiType
 from PyQt5.QtCore import QRegExp, QTimer, Qt
@@ -46,9 +47,12 @@ class Scanner(QMainWindow, Ui_Scanner):
     # state variable
     self.idle = True
     # number of samples to show on the plot
-    self.xsize = 1024
-    self.ysize = 1024
+    self.xsize = 128
+    self.ysize = 128
     self.size = self.xsize * self.ysize
+    X, Y = np.meshgrid(np.linspace(0.0, self.xsize, self.xsize), np.linspace(0.0, self.ysize, self.ysize))
+    self.yco = X.flatten().astype('int')
+    self.xco = Y.flatten().astype('int')
     self.freq = 125.0
     # buffer and offset for the incoming samples
     self.buffer = bytearray(8 * self.size)
@@ -61,9 +65,9 @@ class Scanner(QMainWindow, Ui_Scanner):
     self.canvas = FigureCanvas(figure)
     self.plotLayout.addWidget(self.canvas)
     self.axes.axis((0.0, self.xsize, 0.0, self.ysize))
-    x, y = np.meshgrid(np.linspace(0.0, self.xsize, self.xsize), np.linspace(0.0, self.ysize, self.ysize))
+    x, y = np.meshgrid(np.linspace(0.0, self.xsize, self.xsize+1), np.linspace(0.0, self.ysize, self.ysize+1))
     z = x / self.xsize + y * 0.0
-    self.mesh = self.axes.pcolormesh(x, y, z, cmap = cm.plasma)
+    self.mesh = self.axes.pcolormesh(x, y, z, cmap = cm.gray,vmin = 0, vmax = 1)
     # create navigation toolbar
     self.toolbar = NavigationToolbar(self.canvas, self.plotWidget, False)
     # remove subplots action
@@ -137,14 +141,21 @@ class Scanner(QMainWindow, Ui_Scanner):
 
   def read_data(self):
     size = self.socket.bytesAvailable()
+    print(size)
     if self.offset + size < 8 * self.size:
       self.buffer[self.offset:self.offset + size] = self.socket.read(size)
       self.offset += size
+#      plt.figure()
+#      plt.plot(np.frombuffer(self.buffer,  np.int32)[0::2])
+#      plt.show()
     else:
       self.meshTimer.stop()
       self.buffer[self.offset:8 * self.size] = self.socket.read(8 * self.size - self.offset)
       self.offset = 0
       self.update_mesh()
+      plt.figure()
+      plt.plot(self.data[0::2])
+      plt.show()
       self.scanButton.setEnabled(True)
 
   def display_error(self, socketError):
@@ -203,41 +214,43 @@ class Scanner(QMainWindow, Ui_Scanner):
     if self.idle: return
     self.socket.write(struct.pack('<I', 8<<28 | int(value)))
 
-  # def set_coordinates(self):
-  #   if self.idle: return
-  #   self.socket.write(struct.pack('<I', 9<<28))
-  #   for i in range(256):
-  #     for j in range(512):
-  #       value = (i * 2 + 0 << 18) | (j << 4)
-  #       self.socket.write(struct.pack('<I', 10<<28 | int(value)))
-  #     for j in range(512):
-  #       value = (i * 2 + 1 << 18) | (511 - j << 4)
-  #       self.socket.write(struct.pack('<I', 10<<28 | int(value)))
+
+#  def set_coordinates(self):
+#    if self.idle: return
+#    self.socket.write(struct.pack('<I', 9<<28))
+#    for i in range(self.xsize):
+#      for j in range(self.ysize):
+#        value = (i + 0 << 18) | (j << 4)
+#        self.socket.write(struct.pack('<I', 10<<28 | int(value)))
+
 
   def set_coordinates(self):
     if self.idle: return
     self.socket.write(struct.pack('<I', 9<<28))
-    for i in range(self.xsize):
-      for j in range(self.ysize):
-        value = (i + 0 << 18) | (j << 4)
+    for i in range(self.size):
+        value = (self.xco[i] + 0 << 18) | (self.yco[i] << 4)
         self.socket.write(struct.pack('<I', 10<<28 | int(value)))
 
 
   def scan(self):
     if self.idle: return
+    print('start scanning')
     self.scanButton.setEnabled(False)
     self.data[:] = np.zeros(2 * self.xsize * self.ysize, np.int32)
     self.update_mesh()
     self.set_coordinates()
     self.socket.write(struct.pack('<I', 12<<28))
-    self.meshTimer.start(1000)
+    self.meshTimer.start(500)
 
   def update_mesh(self):
     result = self.data[0::2]/(self.samplesValue.value() * self.pulsesValue.value() * 8192.0)
+    result = result - np.min(result)
     result = result.reshape(self.xsize, self.ysize)
     result[1::2, :] = result[1::2, ::-1]
     self.mesh.set_array(result.reshape(self.xsize * self.ysize))
+    self.mesh.set_clim(vmin = result.min(), vmax = result.max())
     self.canvas.draw()
+    
 
 app = QApplication(sys.argv)
 window = Scanner()

@@ -37,6 +37,9 @@ from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
 
 Ui_Scanner, QMainWindow = loadUiType('scanner.ui')
 
+sys.path.append(r'C:\Users\DJannis\Documents\RedPitaya\red-pitaya-notes\projects\scanner\client')
+import selfpatterncreator as spc
+
 class Scanner(QMainWindow, Ui_Scanner):
   def __init__(self):
     super(Scanner, self).__init__()
@@ -47,36 +50,22 @@ class Scanner(QMainWindow, Ui_Scanner):
     # state variable
     self.idle = True
     # number of samples to show on the plot
-    self.xsize = 128
-    self.ysize = 128
+    self.xsize = self.xsizeValue.value()
+    self.ysize = self.xsizeValue.value()
     self.size = self.xsize * self.ysize
-    X, Y = np.meshgrid(np.linspace(0.0, self.xsize, self.xsize), np.linspace(0.0, self.ysize, self.ysize))
-    self.yco = X.flatten().astype('int')
-    self.xco = Y.flatten().astype('int')
+    self.x = np.arange(self.xsize) #X array for plotting
+    self.y = np.arange(self.ysize) #Y array for plotting
     self.freq = 125.0
-    # buffer and offset for the incoming samples
-    self.buffer = bytearray(8 * self.size)
-    self.offset = 0
-    self.data = np.frombuffer(self.buffer, np.int32)
-    # create figure
+    
     figure = Figure()
     figure.set_facecolor('none')
     self.axes = figure.add_subplot(111)
     self.canvas = FigureCanvas(figure)
     self.plotLayout.addWidget(self.canvas)
-    self.axes.axis((0.0, self.xsize, 0.0, self.ysize))
-    x, y = np.meshgrid(np.linspace(0.0, self.xsize, self.xsize+1), np.linspace(0.0, self.ysize, self.ysize+1))
-    z = x / self.xsize + y * 0.0
-    self.mesh = self.axes.pcolormesh(x, y, z, cmap = cm.gray,vmin = 0, vmax = 1)
-    # create navigation toolbar
-    self.toolbar = NavigationToolbar(self.canvas, self.plotWidget, False)
-    # remove subplots action
-    actions = self.toolbar.actions()
-    if int(matplotlib.__version__[0]) < 2:
-      self.toolbar.removeAction(actions[7])
-    else:
-      self.toolbar.removeAction(actions[6])
+    self.change_scan_size()
     self.plotLayout.addWidget(self.toolbar)
+
+    
     # create TCP socket
     self.socket = QTcpSocket(self)
     self.socket.connected.connect(self.connected)
@@ -94,6 +83,9 @@ class Scanner(QMainWindow, Ui_Scanner):
     self.acqdelayValue.valueChanged.connect(self.set_acqdelay)
     self.samplesValue.valueChanged.connect(self.set_samples)
     self.pulsesValue.valueChanged.connect(self.set_pulses)
+    self.xsizeValue.valueChanged.connect(self.set_xsize)
+    self.ysizeValue.valueChanged.connect(self.set_ysize)
+    
     # create timers
     self.startTimer = QTimer(self)
     self.startTimer.timeout.connect(self.timeout)
@@ -141,7 +133,6 @@ class Scanner(QMainWindow, Ui_Scanner):
 
   def read_data(self):
     size = self.socket.bytesAvailable()
-    print(size)
     if self.offset + size < 8 * self.size:
       self.buffer[self.offset:self.offset + size] = self.socket.read(size)
       self.offset += size
@@ -213,6 +204,44 @@ class Scanner(QMainWindow, Ui_Scanner):
   def set_pulses(self, value):
     if self.idle: return
     self.socket.write(struct.pack('<I', 8<<28 | int(value)))
+    
+  def set_xsize(self, value):
+    self.xsize = value
+    self.size = self.xsize * self.ysize
+    self.y = np.arange(self.xsize) 
+    self.change_scan_size()
+    
+    
+  def set_ysize(self, value):
+    self.ysize = value
+    self.size = self.xsize * self.ysize
+    self.y = np.arange(self.ysize)
+    self.change_scan_size()
+
+  def change_scan_size(self):
+    self.x = np.arange(self.xsize) #X array for plotting
+    self.y = np.arange(self.ysize) #Y array for plotting
+    
+    # buffer and offset for the incoming samples
+    self.buffer = bytearray(8 * self.xsize * self.ysize)
+    self.offset = 0
+    self.data = np.frombuffer(self.buffer, np.int32)
+    # create figure
+    self.axes.axis((0.0, self.ysize, 0.0, self.xsize))
+    x, y = np.meshgrid(np.linspace(0.0, self.ysize, self.ysize+1), np.linspace(0.0, self.xsize, self.xsize+1))
+    z = x / self.xsize + y * 0.0
+    self.mesh = self.axes.pcolormesh(x, y, z, cmap = cm.gray,vmin = 0, vmax = 1)
+    # create navigation toolbar
+    self.toolbar = NavigationToolbar(self.canvas, self.plotWidget, False)
+    # remove subplots action
+    actions = self.toolbar.actions()
+    if int(matplotlib.__version__[0]) < 2:
+      self.toolbar.removeAction(actions[7])
+    else:
+      self.toolbar.removeAction(actions[6])
+    self.canvas.draw()
+
+    
 
 
 #  def set_coordinates(self):
@@ -227,8 +256,8 @@ class Scanner(QMainWindow, Ui_Scanner):
   def set_coordinates(self):
     if self.idle: return
     self.socket.write(struct.pack('<I', 9<<28))
-    for i in range(self.size):
-        value = (self.xco[i] + 0 << 18) | (self.yco[i] << 4)
+    for i in range(self.xco.size):
+        value = (self.xco_prop[i] + 0 << 18) | (self.yco_prop[i] << 4)
         self.socket.write(struct.pack('<I', 10<<28 | int(value)))
 
 
@@ -236,6 +265,15 @@ class Scanner(QMainWindow, Ui_Scanner):
     if self.idle: return
     print('start scanning')
     self.scanButton.setEnabled(False)
+    scan_name = self.comboBoxScan.currentText()
+    xco, yco = spc.LoadScanPattern(scan_name, self.xsize, self.ysize)
+    #Change the coordinate such that we scan the full fov
+    self.propx = int(np.ceil(512/(self.xsize)))
+    self.propy = int(np.ceil(512/(self.ysize)))
+    self.xco = xco
+    self.yco = yco
+    self.xco_prop = self.propx*self.xco
+    self.yco_prop = self.propy*self.yco
     self.data[:] = np.zeros(2 * self.xsize * self.ysize, np.int32)
     self.update_mesh()
     self.set_coordinates()
@@ -246,7 +284,7 @@ class Scanner(QMainWindow, Ui_Scanner):
     result = self.data[0::2]/(self.samplesValue.value() * self.pulsesValue.value() * 8192.0)
     result = result - np.min(result)
     result = result.reshape(self.xsize, self.ysize)
-    result[1::2, :] = result[1::2, ::-1]
+    result = result[self.x[self.xco], self.y[self.yco]]
     self.mesh.set_array(result.reshape(self.xsize * self.ysize))
     self.mesh.set_clim(vmin = result.min(), vmax = result.max())
     self.canvas.draw()

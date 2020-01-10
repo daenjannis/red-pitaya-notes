@@ -37,7 +37,7 @@ from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
 
 Ui_Scanner, QMainWindow = loadUiType('scanner.ui')
 
-sys.path.append(r'C:\Users\DJannis\Documents\RedPitaya\red-pitaya-notes\projects\scanner\client')
+sys.path.append(r'C:\Users\OUDS\Documents\RedPitaya\red-pitaya-notes\projects\scanner\client')
 import selfpatterncreator as spc
 
 class Scanner(QMainWindow, Ui_Scanner):
@@ -136,17 +136,11 @@ class Scanner(QMainWindow, Ui_Scanner):
     if self.offset + size < 8 * self.size:
       self.buffer[self.offset:self.offset + size] = self.socket.read(size)
       self.offset += size
-#      plt.figure()
-#      plt.plot(np.frombuffer(self.buffer,  np.int32)[0::2])
-#      plt.show()
     else:
       self.meshTimer.stop()
       self.buffer[self.offset:8 * self.size] = self.socket.read(8 * self.size - self.offset)
       self.offset = 0
       self.update_mesh()
-      plt.figure()
-      plt.plot(self.data[0::2])
-      plt.show()
       self.scanButton.setEnabled(True)
 
   def display_error(self, socketError):
@@ -208,7 +202,7 @@ class Scanner(QMainWindow, Ui_Scanner):
   def set_xsize(self, value):
     self.xsize = value
     self.size = self.xsize * self.ysize
-    self.y = np.arange(self.xsize) 
+    self.x = np.arange(self.xsize) 
     self.change_scan_size()
     
     
@@ -217,8 +211,10 @@ class Scanner(QMainWindow, Ui_Scanner):
     self.size = self.xsize * self.ysize
     self.y = np.arange(self.ysize)
     self.change_scan_size()
+    
 
   def change_scan_size(self):
+    aspect = 1
     self.x = np.arange(self.xsize) #X array for plotting
     self.y = np.arange(self.ysize) #Y array for plotting
     
@@ -231,6 +227,7 @@ class Scanner(QMainWindow, Ui_Scanner):
     x, y = np.meshgrid(np.linspace(0.0, self.ysize, self.ysize+1), np.linspace(0.0, self.xsize, self.xsize+1))
     z = x / self.xsize + y * 0.0
     self.mesh = self.axes.pcolormesh(x, y, z, cmap = cm.gray,vmin = 0, vmax = 1)
+    self.axes.set_aspect(aspect)
     # create navigation toolbar
     self.toolbar = NavigationToolbar(self.canvas, self.plotWidget, False)
     # remove subplots action
@@ -242,17 +239,6 @@ class Scanner(QMainWindow, Ui_Scanner):
     self.canvas.draw()
 
     
-
-
-#  def set_coordinates(self):
-#    if self.idle: return
-#    self.socket.write(struct.pack('<I', 9<<28))
-#    for i in range(self.xsize):
-#      for j in range(self.ysize):
-#        value = (i + 0 << 18) | (j << 4)
-#        self.socket.write(struct.pack('<I', 10<<28 | int(value)))
-
-
   def set_coordinates(self):
     if self.idle: return
     self.socket.write(struct.pack('<I', 9<<28))
@@ -268,24 +254,28 @@ class Scanner(QMainWindow, Ui_Scanner):
     scan_name = self.comboBoxScan.currentText()
     xco, yco = spc.LoadScanPattern(scan_name, self.xsize, self.ysize)
     #Change the coordinate such that we scan the full fov
-    self.propx = int(np.ceil(512/(self.xsize)))
-    self.propy = int(np.ceil(512/(self.ysize)))
+    self.propx = int(np.floor(512/(self.xsize)))
+    self.propy = int(np.floor(512/(self.ysize)))
     self.xco = xco
     self.yco = yco
-    self.xco_prop = self.propx*self.xco
-    self.yco_prop = self.propy*self.yco
+    if self.xsize < 512:
+        self.xco_prop = self.propx*self.xco
+        self.yco_prop = self.propy*self.yco
+    else: 
+        self.xco_prop = self.xco
+        self.yco_prop = self.yco
     self.data[:] = np.zeros(2 * self.xsize * self.ysize, np.int32)
     self.update_mesh()
     self.set_coordinates()
     self.socket.write(struct.pack('<I', 12<<28))
-    self.meshTimer.start(500)
+    self.meshTimer.start(self.plottimerValue.value())
 
   def update_mesh(self):
     result = self.data[0::2]/(self.samplesValue.value() * self.pulsesValue.value() * 8192.0)
     result = result - np.min(result)
-    result = result.reshape(self.xsize, self.ysize)
-    result = result[self.x[self.xco], self.y[self.yco]]
-    self.mesh.set_array(result.reshape(self.xsize * self.ysize))
+    image = np.zeros((self.xsize, self.ysize))
+    image[self.xco, self.yco] = result
+    self.mesh.set_array(image.reshape(self.xsize * self.ysize))
     self.mesh.set_clim(vmin = result.min(), vmax = result.max())
     self.canvas.draw()
     

@@ -114,6 +114,13 @@
          </property>
         </spacer>
        </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Pattern</string>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="1">
         <widget class="QComboBox" name="comboBoxScan">
          <item>
@@ -138,7 +145,14 @@
          </item>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="checkBoxLoad">
+         <property name="text">
+          <string>Load Pattern</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -151,14 +165,14 @@
          </property>
         </spacer>
        </item>
-       <item row="5" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="periodLabel">
          <property name="text">
           <string>Trigger period, us</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="7" column="1">
         <widget class="QDoubleSpinBox" name="periodValue">
          <property name="decimals">
           <number>1</number>
@@ -177,14 +191,14 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="trgtimeLabel">
          <property name="text">
           <string>Trigger duration, us</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="8" column="1">
         <widget class="QDoubleSpinBox" name="trgtimeValue">
          <property name="decimals">
           <number>1</number>
@@ -203,14 +217,14 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="9" column="0">
         <widget class="QLabel" name="trginvLabel">
          <property name="text">
           <string>Trigger inverted</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
+       <item row="9" column="1">
         <widget class="QCheckBox" name="trginvCheck">
          <property name="text">
           <string/>
@@ -220,7 +234,7 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
+       <item row="10" column="1">
         <spacer name="spacer_1">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -233,14 +247,14 @@
          </property>
         </spacer>
        </item>
-       <item row="9" column="0">
+       <item row="11" column="0">
         <widget class="QLabel" name="shdelayLabel">
          <property name="text">
           <string>S&amp;H delay, us</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="11" column="1">
         <widget class="QDoubleSpinBox" name="shdelayValue">
          <property name="decimals">
           <number>1</number>
@@ -259,14 +273,14 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="shtimeLabel">
          <property name="text">
           <string>S&amp;H duration, us</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="1">
+       <item row="12" column="1">
         <widget class="QDoubleSpinBox" name="shtimeValue">
          <property name="decimals">
           <number>1</number>
@@ -285,21 +299,21 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="0">
+       <item row="13" column="0">
         <widget class="QLabel" name="shinvLabel">
          <property name="text">
           <string>S&amp;H inverted</string>
          </property>
         </widget>
        </item>
-       <item row="11" column="1">
+       <item row="13" column="1">
         <widget class="QCheckBox" name="shinvCheck">
          <property name="text">
           <string/>
          </property>
         </widget>
        </item>
-       <item row="12" column="1">
+       <item row="14" column="1">
         <spacer name="spacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -312,14 +326,14 @@
          </property>
         </spacer>
        </item>
-       <item row="13" column="0">
+       <item row="15" column="0">
         <widget class="QLabel" name="acqdelayLabel">
          <property name="text">
           <string>Acquisition delay, us</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="1">
+       <item row="15" column="1">
         <widget class="QDoubleSpinBox" name="acqdelayValue">
          <property name="decimals">
           <number>1</number>
@@ -338,7 +352,7 @@
          </property>
         </widget>
        </item>
-       <item row="14" column="1">
+       <item row="16" column="1">
         <spacer name="spacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -351,14 +365,14 @@
          </property>
         </spacer>
        </item>
-       <item row="15" column="0">
+       <item row="17" column="0">
         <widget class="QLabel" name="samplesLabel">
          <property name="text">
           <string>Samples per pulse</string>
          </property>
         </widget>
        </item>
-       <item row="15" column="1">
+       <item row="17" column="1">
         <widget class="QSpinBox" name="samplesValue">
          <property name="minimum">
           <number>2</number>
@@ -374,24 +388,27 @@
          </property>
         </widget>
        </item>
-       <item row="16" column="0">
+       <item row="18" column="0">
         <widget class="QLabel" name="pulsesLabel">
          <property name="text">
           <string>Pulses per pixel</string>
          </property>
         </widget>
        </item>
-       <item row="16" column="1">
+       <item row="18" column="1">
         <widget class="QSpinBox" name="pulsesValue">
          <property name="minimum">
-          <number>2</number>
+          <number>1</number>
          </property>
          <property name="maximum">
           <number>256</number>
          </property>
+         <property name="value">
+          <number>1</number>
+         </property>
         </widget>
        </item>
-       <item row="17" column="1">
+       <item row="21" column="1">
         <spacer name="spacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -404,21 +421,21 @@
          </property>
         </spacer>
        </item>
-       <item row="18" column="0">
+       <item row="22" column="0">
         <widget class="QLabel" name="addrLabel">
          <property name="text">
           <string>IP address</string>
          </property>
         </widget>
        </item>
-       <item row="18" column="1">
+       <item row="22" column="1">
         <widget class="QLineEdit" name="addrValue">
          <property name="text">
           <string>143.129.150.93</string>
          </property>
         </widget>
        </item>
-       <item row="19" column="1">
+       <item row="23" column="1">
         <spacer name="spacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -431,14 +448,14 @@
          </property>
         </spacer>
        </item>
-       <item row="20" column="1">
+       <item row="24" column="1">
         <widget class="QPushButton" name="connectButton">
          <property name="text">
           <string>Connect</string>
          </property>
         </widget>
        </item>
-       <item row="21" column="1">
+       <item row="25" column="1">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -451,10 +468,57 @@
          </property>
         </spacer>
        </item>
-       <item row="22" column="1">
-        <widget class="QPushButton" name="scanButton">
+       <item row="4" column="1">
+        <widget class="QPushButton" name="loadpatternButton">
          <property name="text">
-          <string>Scan</string>
+          <string>Browse Scan Pattern</string>
+         </property>
+        </widget>
+       </item>
+       <item row="19" column="1">
+        <widget class="QSpinBox" name="plottimerValue">
+         <property name="minimum">
+          <number>100</number>
+         </property>
+         <property name="maximum">
+          <number>10000</number>
+         </property>
+         <property name="singleStep">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>500</number>
+         </property>
+         <property name="displayIntegerBase">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="19" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Plot Timer</string>
+         </property>
+        </widget>
+       </item>
+       <item row="27" column="1">
+        <widget class="QPushButton" name="acquireButton">
+         <property name="text">
+          <string>Acquire</string>
+         </property>
+        </widget>
+       </item>
+       <item row="27" column="0">
+        <widget class="QPushButton" name="saveButton">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
+       <item row="26" column="1">
+        <widget class="QPushButton" name="searchButton">
+         <property name="text">
+          <string>Search</string>
          </property>
         </widget>
        </item>

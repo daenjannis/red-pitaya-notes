@@ -50,7 +50,7 @@ def HilberPattern(xsize, ysize):
             D = DD
     
     
-    co = np.concatenate((np.array([[0, 0]]),np.cumsum(A, axis = 0))).astype('int')         
+    co = np.concatenate((np.array([[0, 0]]),np.cumsum(A, axis = 0))).astype('int')
     return co[:,0], co[:,1]
 
 def LoadScanPattern(scan_name, xsize, ysize):
@@ -61,7 +61,13 @@ def LoadScanPattern(scan_name, xsize, ysize):
     elif scan_name ==  'Snake Scan':
         xco, yco = SnakeScan(xsize, ysize)
     elif scan_name ==  'Hilbert Scan':
-        xco, yco = HilberPattern(xsize, ysize)
+        boolean1 = np.ceil([np.log2(xsize)]) == np.floor([np.log2(xsize)]) #a power of 2
+        boolean2 = xsize == ysize #x and y size has to be the same.
+        if boolean1 * boolean2:
+            xco, yco = HilberPattern(xsize, ysize)
+        else:
+            print('Use the same x and y dimension and it needs to be a power of two')
+            xco, yco = NormalPattern(xsize, ysize)
     return xco, yco
 
 
